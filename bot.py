@@ -101,8 +101,8 @@ class ContractView(discord.ui.View):
         # Dar cargo ao membro
         guild = interaction.guild
         member = guild.get_member(self.signee_id)
-        role_name = contract.get("role", MEMBER_ROLE)
-        role = discord.utils.get(guild.roles, name=role_name)
+        role_id = contract.get("role_id")
+        role = guild.get_role(role_id) if role_id else discord.utils.get(guild.roles, name=contract.get("role", MEMBER_ROLE))
 
         if member and role:
             await member.add_roles(role)
@@ -218,14 +218,14 @@ def build_declined_embed(contract: dict) -> discord.Embed:
     membro="O usuário que você quer contratar",
     nome_time="Nome do time",
     posicao="Posição (ex: st/mc, goleiro...)",
-    cargo="Cargo que será dado (padrão: Members)"
+    cargo="Marque o @ do cargo que será dado ao contratado"
 )
 async def contratar(
     interaction: discord.Interaction,
     membro: discord.Member,
     nome_time: str,
     posicao: str,
-    cargo: str = MEMBER_ROLE
+    cargo: discord.Role
 ):
     # Verificar se tem permissão
     manager_role = interaction.guild.get_role(MANAGER_ROLE_ID)
@@ -257,7 +257,8 @@ async def contratar(
         "contractor_name": interaction.user.name,
         "team": nome_time,
         "position": posicao,
-        "role": cargo,
+        "role": cargo.name,
+        "role_id": cargo.id,
         "status": "pending",
         "created_at": now,
         "expires_at": expires_at,
